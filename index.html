@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instagram Influencer ROI Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f6f8;
+    color: #1a1a1a;
+    padding: 24px;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header {
+    margin-bottom: 24px;
+  }
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 14px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e4e6ea;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h2 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #555;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .row label {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+  }
+  .row label .hint {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .row input, .row select {
+    width: 130px;
+    padding: 8px 10px;
+    border: 1px solid #d0d3d8;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    text-align: right;
+  }
+  .row input:focus, .row select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+  .row select { text-align: left; }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .metric {
+    background: #f8f9fb;
+    border: 1px solid #ebedf0;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .metric .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #777;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .metric .val {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111;
+  }
+  .metric .sub {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  .verdict {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-align: center;
+    font-size: 15px;
+  }
+  .verdict.green { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+  .verdict.amber { background: #fff8e1; color: #8a6300; border: 1px solid #ffd966; }
+  .verdict.red { background: #fdecea; color: #b71c1c; border: 1px solid #f1a9a0; }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .toggle input { width: auto; }
+
+  .formula-note {
+    font-size: 12px;
+    color: #777;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #e4e6ea;
+  }
+
+  .cpv-panel {
+    margin-top: 16px;
+    border-radius: 10px;
+    border: 1px solid #e4e6ea;
+    overflow: hidden;
+  }
+  .cpv-panel .cpv-header {
+    background: #1f2937;
+    color: white;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .cpv-panel .cpv-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #e4e6ea;
+  }
+  .cpv-panel .cpv-cell {
+    background: #fff;
+    padding: 14px;
+  }
+  .cpv-panel .cpv-cell .lbl {
+    font-size: 11px;
+    color: #777;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .cpv-panel .cpv-cell .big {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111;
+  }
+  .cpv-panel .cpv-cell .small {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+  .cpv-panel .cpv-verdict {
+    padding: 12px 14px;
+    font-weight: 600;
+    text-align: center;
+    font-size: 14px;
+  }
+  .cpv-panel .cpv-verdict.green { background: #e8f5e9; color: #1b5e20; }
+  .cpv-panel .cpv-verdict.amber { background: #fff8e1; color: #8a6300; }
+  .cpv-panel .cpv-verdict.red { background: #fdecea; color: #b71c1c; }
+
+  .editable-banner {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .scenario-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .scenario-table th, .scenario-table td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid #eef0f2;
+  }
+  .scenario-table th:first-child, .scenario-table td:first-child { text-align: left; }
+  .scenario-table thead th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #666;
+    font-weight: 600;
+    background: #f8f9fb;
+  }
+  .scenario-table tbody tr:last-child td { border-bottom: none; font-weight: 600; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #eef2ff;
+    color: #3730a3;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Instagram Influencer ROI Calculator</h1>
+    <p class="sub">Plug in a deal and see expected clicks, sales, ROAS, ROI and CPV. <strong>All blue fields are editable</strong> — anyone with the link can run their own scenarios. Nothing is saved or shared; each person works with their own copy in their browser.</p>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: INPUTS -->
+    <div>
+      <div class="card">
+        <h2>1. The Deal</h2>
+        <div class="row">
+          <label>Influencer name<span class="hint">For your reference</span></label>
+          <input type="text" id="name" value="@example" style="text-align:left">
+        </div>
+        <div class="row">
+          <label>Content type</label>
+          <select id="type">
+            <option value="story">Story (24h slot)</option>
+            <option value="reel">Reel</option>
+            <option value="post">Feed post</option>
+            <option value="combo">Story + Reel combo</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Influencer fee (£)<span class="hint">e.g. 600 for a 24h story</span></label>
+          <input type="number" id="fee" value="600" min="0">
+        </div>
+        <div class="row">
+          <label>Avg organic views<span class="hint">From their media kit / past data</span></label>
+          <input type="number" id="views" value="28232" min="0">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2>2. Performance Assumptions</h2>
+        <div class="row">
+          <label>Data source<span class="hint">Use real click data if the influencer shares it</span></label>
+          <select id="dataMode">
+            <option value="ctr">Estimate by CTR %</option>
+            <option value="clicks" selected>I know avg link clicks</option>
+          </select>
+        </div>
+        <div class="row" id="ctrRow" style="display:none">
+          <label>Link CTR (%)<span class="hint">% of viewers tapping the link. Stories ~0.5-2%</span></label>
+          <input type="number" id="ctr" value="1.0" step="0.1" min="0">
+        </div>
+        <div class="row" id="clicksRow">
+          <label>Avg link clicks per story<span class="hint">From their media kit / screenshots</span></label>
+          <input type="number" id="avgClicks" value="1031" min="0">
+        </div>
+        <div class="row" id="derivedCtrRow">
+          <label>Implied CTR<span class="hint">Calculated for you — sanity check</span></label>
+          <input type="text" id="derivedCtr" readonly style="background:#f3f4f6;color:#444">
+        </div>
+        <div class="row">
+          <label>Landing → purchase conversion rate (%)<span class="hint">Your site CVR. DTC typical 2-4%</span></label>
+          <input type="number" id="cvr" value="3.0" step="0.1" min="0">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2>3. Product Economics</h2>
+        <div class="row">
+          <label>AOV (£)<span class="hint">Average order value</span></label>
+          <input type="number" id="aov" value="30" min="0">
+        </div>
+        <div class="row">
+          <label>Gross margin (%)<span class="hint">After COGS &amp; shipping. For ROI calc</span></label>
+          <input type="number" id="margin" value="60" min="0" max="100">
+        </div>
+        <div class="row">
+          <label>Target ROAS<span class="hint">Your green-light threshold</span></label>
+          <input type="number" id="targetRoas" value="2.0" step="0.1" min="0">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2>4. Paid Amplification <span class="pill">Optional</span></h2>
+        <label class="toggle">
+          <input type="checkbox" id="paidOn">
+          Boost asset as a paid partnership
+        </label>
+        <div class="row">
+          <label>Additional ad spend (£)</label>
+          <input type="number" id="paidSpend" value="500" min="0">
+        </div>
+        <div class="row">
+          <label>Paid CPM (£)<span class="hint">Meta partnership ad CPM, typical £5-15</span></label>
+          <input type="number" id="paidCpm" value="8" step="0.5" min="0">
+        </div>
+        <div class="row">
+          <label>Paid CTR (%)<span class="hint">Often 0.8-2% for paid partnerships</span></label>
+          <input type="number" id="paidCtr" value="1.2" step="0.1" min="0">
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2>5. Saved Scenarios <span class="pill">Local to your browser</span></h2>
+        <div style="font-size:12px;color:#666;margin-bottom:12px">
+          Save the current deal under a name (e.g. an influencer's handle). Saved scenarios stay in your browser only — they're not shared or sent anywhere.
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="saveName" placeholder="Name this scenario (e.g. @melissa)"
+                 style="flex:1;padding:8px 10px;border:1px solid #d0d3d8;border-radius:6px;font-size:14px;font-family:inherit">
+          <button id="saveBtn" type="button"
+                  style="padding:8px 14px;background:#2563eb;color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">
+            Save
+          </button>
+        </div>
+        <div id="scenariosList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="scenariosEmpty" style="font-size:12px;color:#888;font-style:italic;padding:8px 0">
+          No saved scenarios yet. Save your first deal to compare later.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div class="card">
+        <h2>Expected Performance</h2>
+        <div class="results-grid">
+          <div class="metric">
+            <div class="lbl">Link clicks</div>
+            <div class="val" id="rClicks">—</div>
+            <div class="sub" id="rClicksSub">organic only</div>
+          </div>
+          <div class="metric">
+            <div class="lbl">Orders</div>
+            <div class="val" id="rOrders">—</div>
+            <div class="sub" id="rOrdersSub"></div>
+          </div>
+          <div class="metric">
+            <div class="lbl">Revenue</div>
+            <div class="val" id="rRev">—</div>
+            <div class="sub" id="rRevSub"></div>
+          </div>
+          <div class="metric">
+            <div class="lbl">Gross profit</div>
+            <div class="val" id="rProfit">—</div>
+            <div class="sub" id="rProfitSub">after margin, before fee</div>
+          </div>
+          <div class="metric">
+            <div class="lbl">ROAS</div>
+            <div class="val" id="rRoas">—</div>
+            <div class="sub">Revenue ÷ Total cost</div>
+          </div>
+          <div class="metric">
+            <div class="lbl">ROI (profit basis)</div>
+            <div class="val" id="rRoi">—</div>
+            <div class="sub">(Profit − Cost) ÷ Cost</div>
+          </div>
+          <div class="metric">
+            <div class="lbl">CPV (organic)</div>
+            <div class="val" id="rCpv">—</div>
+            <div class="sub">Fee ÷ Views</div>
+          </div>
+          <div class="metric">
+            <div class="lbl">CPA</div>
+            <div class="val" id="rCpa">—</div>
+            <div class="sub">Total cost ÷ Orders</div>
+          </div>
+        </div>
+
+        <div class="verdict" id="verdict">—</div>
+
+        <div class="cpv-panel">
+          <div class="cpv-header">Cost Per View — Decision Panel</div>
+          <div class="cpv-body">
+            <div class="cpv-cell">
+              <div class="lbl">Your CPV (this deal)</div>
+              <div class="big" id="cpvActual">—</div>
+              <div class="small" id="cpvActualPence">—</div>
+            </div>
+            <div class="cpv-cell">
+              <div class="lbl">Max CPV at target ROAS</div>
+              <div class="big" id="cpvMax">—</div>
+              <div class="small" id="cpvMaxPence">—</div>
+            </div>
+          </div>
+          <div class="cpv-verdict" id="cpvVerdict">—</div>
+        </div>
+
+        <div class="formula-note">
+          <strong>Max fee at target ROAS:</strong> <span id="maxFee">—</span><br>
+          CPV = Total cost ÷ Views. The lower your CPV, the more efficient the deal. Above the max-CPV ceiling means the deal can't hit your target ROAS at this audience size.
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h2>Organic vs. Paid-Boosted Comparison</h2>
+        <table class="scenario-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Organic only</th>
+              <th>Organic + Paid</th>
+              <th>Δ</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody">
+            <tr><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div class="formula-note">
+          Paid scenario adds boosted reach via the partnership ad. Useful for stress-testing whether amplification rescues a borderline deal — or just inflates the bill.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtGBP = n => '£' + (Math.round(n * 100) / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtGBP0 = n => '£' + Math.round(n).toLocaleString('en-GB');
+const fmtN = n => Math.round(n).toLocaleString('en-GB');
+const fmtX = n => (Math.round(n * 100) / 100).toFixed(2) + 'x';
+const fmtP = n => (Math.round(n * 10) / 10).toFixed(1) + '%';
+
+function calcScenario(views, fee, ctrPct, cvrPct, aov, marginPct) {
+  const clicks = views * (ctrPct / 100);
+  const orders = clicks * (cvrPct / 100);
+  const revenue = orders * aov;
+  const grossProfit = revenue * (marginPct / 100);
+  const cost = fee;
+  const roas = cost > 0 ? revenue / cost : 0;
+  const roi = cost > 0 ? (grossProfit - cost) / cost : 0;
+  const cpa = orders > 0 ? cost / orders : 0;
+  return { views, clicks, orders, revenue, grossProfit, cost, roas, roi, cpa };
+}
+
+function calc() {
+  const fee = +$('fee').value || 0;
+  const views = +$('views').value || 0;
+  const cvr = +$('cvr').value || 0;
+  const aov = +$('aov').value || 0;
+  const margin = +$('margin').value || 0;
+  const targetRoas = +$('targetRoas').value || 1;
+
+  // Data source toggle: derive CTR from clicks, or use entered CTR
+  const mode = $('dataMode').value;
+  $('ctrRow').style.display = (mode === 'ctr') ? 'flex' : 'none';
+  $('clicksRow').style.display = (mode === 'clicks') ? 'flex' : 'none';
+  $('derivedCtrRow').style.display = (mode === 'clicks') ? 'flex' : 'none';
+
+  let ctr;
+  if (mode === 'clicks') {
+    const avgClicks = +$('avgClicks').value || 0;
+    ctr = views > 0 ? (avgClicks / views) * 100 : 0;
+    $('derivedCtr').value = fmtP(ctr) + '  (' + fmtN(avgClicks) + ' clicks ÷ ' + fmtN(views) + ' views)';
+  } else {
+    ctr = +$('ctr').value || 0;
+  }
+
+  const paidOn = $('paidOn').checked;
+  const paidSpend = +$('paidSpend').value || 0;
+  const paidCpm = +$('paidCpm').value || 0;
+  const paidCtr = +$('paidCtr').value || 0;
+
+  // Organic-only scenario
+  const organic = calcScenario(views, fee, ctr, cvr, aov, margin);
+
+  // Paid scenario: add paid views/clicks
+  const paidViews = paidCpm > 0 ? (paidSpend / paidCpm) * 1000 : 0;
+  const paidClicks = paidViews * (paidCtr / 100);
+  const paidOrders = paidClicks * (cvr / 100);
+  const paidRevenue = paidOrders * aov;
+  const paidProfit = paidRevenue * (margin / 100);
+
+  const combined = {
+    views: organic.views + paidViews,
+    clicks: organic.clicks + paidClicks,
+    orders: organic.orders + paidOrders,
+    revenue: organic.revenue + paidRevenue,
+    grossProfit: organic.grossProfit + paidProfit,
+    cost: fee + paidSpend,
+  };
+  combined.roas = combined.cost > 0 ? combined.revenue / combined.cost : 0;
+  combined.roi = combined.cost > 0 ? (combined.grossProfit - combined.cost) / combined.cost : 0;
+  combined.cpa = combined.orders > 0 ? combined.cost / combined.orders : 0;
+
+  const active = paidOn ? combined : organic;
+
+  // Display headline metrics
+  $('rClicks').textContent = fmtN(active.clicks);
+  $('rClicksSub').textContent = paidOn ? `incl. ${fmtN(paidClicks)} from paid` : 'organic only';
+  $('rOrders').textContent = fmtN(active.orders);
+  $('rOrdersSub').textContent = `at ${fmtP(cvr)} site CVR`;
+  $('rRev').textContent = fmtGBP0(active.revenue);
+  $('rRevSub').textContent = `${fmtN(active.orders)} orders × ${fmtGBP0(aov)}`;
+  $('rProfit').textContent = fmtGBP0(active.grossProfit);
+  $('rProfitSub').textContent = `${fmtP(margin)} margin`;
+  $('rRoas').textContent = fmtX(active.roas);
+  $('rRoi').textContent = active.roi >= 0 ? '+' + Math.round(active.roi * 100) + '%' : Math.round(active.roi * 100) + '%';
+  $('rCpv').textContent = active.views > 0 ? fmtGBP((active.cost / active.views) * 1000) + ' /1k' : '—';
+  $('rCpa').textContent = active.orders > 0 ? fmtGBP(active.cpa) : '—';
+
+  // Max fee at target ROAS
+  const totalRevenuePotential = paidOn ? (organic.revenue + paidRevenue) : organic.revenue;
+  const totalNonFeeCost = paidOn ? paidSpend : 0;
+  const maxFee = (totalRevenuePotential / targetRoas) - totalNonFeeCost;
+  $('maxFee').textContent = maxFee > 0 ? fmtGBP0(maxFee) : '£0 (deal fails target at any fee)';
+
+  // CPV decision panel
+  // Actual CPV = total cost ÷ total views (active scenario)
+  const cpvActual = active.views > 0 ? active.cost / active.views : 0;
+  // Max CPV = max total cost at target ÷ active views.  Max total cost = revenue / targetROAS
+  const maxTotalCost = totalRevenuePotential / targetRoas;
+  const cpvMax = active.views > 0 && maxTotalCost > 0 ? maxTotalCost / active.views : 0;
+
+  $('cpvActual').textContent = cpvActual > 0 ? fmtGBP(cpvActual * 1000) + ' /1k views' : '—';
+  $('cpvActualPence').textContent = cpvActual > 0 ? (cpvActual * 100).toFixed(2) + 'p per view' : '—';
+  $('cpvMax').textContent = cpvMax > 0 ? fmtGBP(cpvMax * 1000) + ' /1k views' : '—';
+  $('cpvMaxPence').textContent = cpvMax > 0 ? (cpvMax * 100).toFixed(2) + 'p per view' : '—';
+
+  // CPV verdict — green if your CPV ≤ max CPV, amber if within 25% over, red otherwise
+  const cpvV = $('cpvVerdict');
+  cpvV.classList.remove('green', 'amber', 'red');
+  if (cpvMax === 0 || cpvActual === 0) {
+    cpvV.textContent = 'Add views and cost to see CPV verdict';
+  } else if (cpvActual <= cpvMax) {
+    const headroom = ((cpvMax - cpvActual) / cpvMax) * 100;
+    cpvV.classList.add('green');
+    cpvV.textContent = `GREEN · CPV is ${headroom.toFixed(0)}% below your ceiling. Efficient deal at this price.`;
+  } else if (cpvActual <= cpvMax * 1.25) {
+    const over = ((cpvActual - cpvMax) / cpvMax) * 100;
+    cpvV.classList.add('amber');
+    cpvV.textContent = `AMBER · CPV is ${over.toFixed(0)}% above your ceiling. Negotiate the fee down or skip paid amp.`;
+  } else {
+    const over = ((cpvActual - cpvMax) / cpvMax) * 100;
+    cpvV.classList.add('red');
+    cpvV.textContent = `RED · CPV is ${over.toFixed(0)}% above your ceiling. The audience size doesn't justify this cost.`;
+  }
+
+  // Verdict
+  const v = $('verdict');
+  v.classList.remove('green', 'amber', 'red');
+  if (active.roas >= targetRoas) {
+    v.classList.add('green');
+    v.textContent = `GREEN LIGHT · ${fmtX(active.roas)} ROAS beats your ${fmtX(targetRoas)} target. Worth booking.`;
+  } else if (active.roas >= targetRoas * 0.75) {
+    v.classList.add('amber');
+    v.textContent = `AMBER · ${fmtX(active.roas)} ROAS — close to your ${fmtX(targetRoas)} target. Negotiate fee or test.`;
+  } else {
+    v.classList.add('red');
+    v.textContent = `RED LIGHT · ${fmtX(active.roas)} ROAS vs ${fmtX(targetRoas)} target. Push back on price or pass.`;
+  }
+
+  // Comparison table
+  const rows = [
+    ['Views', fmtN(organic.views), fmtN(combined.views), '+' + fmtN(combined.views - organic.views)],
+    ['Clicks', fmtN(organic.clicks), fmtN(combined.clicks), '+' + fmtN(combined.clicks - organic.clicks)],
+    ['Orders', fmtN(organic.orders), fmtN(combined.orders), '+' + fmtN(combined.orders - organic.orders)],
+    ['Revenue', fmtGBP0(organic.revenue), fmtGBP0(combined.revenue), '+' + fmtGBP0(combined.revenue - organic.revenue)],
+    ['Total cost', fmtGBP0(organic.cost), fmtGBP0(combined.cost), '+' + fmtGBP0(combined.cost - organic.cost)],
+    ['ROAS', fmtX(organic.roas), fmtX(combined.roas), (combined.roas - organic.roas >= 0 ? '+' : '') + (combined.roas - organic.roas).toFixed(2) + 'x'],
+  ];
+  $('compareBody').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+}
+
+// ============== Saved scenarios (localStorage) ==============
+const STORAGE_KEY = 'influencer-calc-scenarios-v1';
+const INPUT_IDS = ['name','type','fee','views','dataMode','ctr','avgClicks','cvr','aov','margin','targetRoas','paidSpend','paidCpm','paidCtr'];
+
+function getScenarios() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch(e) { return []; }
+}
+function setScenarios(list) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+  catch(e) { alert('Could not save — your browser may be in private mode.'); }
+}
+
+function snapshotInputs() {
+  const snap = {};
+  INPUT_IDS.forEach(id => {
+    const el = $(id);
+    if (el) snap[id] = el.value;
+  });
+  snap.paidOn = $('paidOn').checked;
+  return snap;
+}
+
+function applyInputs(snap) {
+  INPUT_IDS.forEach(id => {
+    const el = $(id);
+    if (el && snap[id] !== undefined) el.value = snap[id];
+  });
+  if (snap.paidOn !== undefined) $('paidOn').checked = snap.paidOn;
+  calc();
+}
+
+function saveCurrent() {
+  const name = $('saveName').value.trim();
+  if (!name) { $('saveName').focus(); return; }
+  const list = getScenarios();
+  // Upsert by name
+  const existing = list.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+  const entry = {
+    name,
+    savedAt: new Date().toISOString(),
+    inputs: snapshotInputs(),
+    summary: {
+      roas: $('rRoas').textContent,
+      cpv: $('cpvActual').textContent,
+      verdict: $('verdict').textContent.split('·')[0].trim()
+    }
+  };
+  if (existing >= 0) {
+    if (!confirm(`A scenario called "${name}" already exists. Overwrite it?`)) return;
+    list[existing] = entry;
+  } else {
+    list.unshift(entry);
+  }
+  setScenarios(list);
+  $('saveName').value = '';
+  renderScenarios();
+}
+
+function loadScenario(idx) {
+  const list = getScenarios();
+  if (!list[idx]) return;
+  applyInputs(list[idx].inputs);
+  // Scroll to top so user sees the loaded values + verdict
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteScenario(idx) {
+  const list = getScenarios();
+  if (!list[idx]) return;
+  if (!confirm(`Delete "${list[idx].name}"?`)) return;
+  list.splice(idx, 1);
+  setScenarios(list);
+  renderScenarios();
+}
+
+function renderScenarios() {
+  const list = getScenarios();
+  const wrap = $('scenariosList');
+  const empty = $('scenariosEmpty');
+  wrap.innerHTML = '';
+  if (list.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.forEach((s, idx) => {
+    const verdictColor = s.summary.verdict === 'GREEN LIGHT' ? '#1b5e20'
+      : s.summary.verdict === 'AMBER' ? '#8a6300'
+      : s.summary.verdict === 'RED LIGHT' ? '#b71c1c' : '#444';
+    const date = new Date(s.savedAt).toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+    const div = document.createElement('div');
+    div.style.cssText = 'border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px;background:#fafbfc';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14px;color:#111">${escapeHtml(s.name)}</div>
+          <div style="font-size:12px;color:#666;margin-top:2px">
+            ROAS ${escapeHtml(s.summary.roas)} · CPV ${escapeHtml(s.summary.cpv)}
+            · <span style="color:${verdictColor};font-weight:600">${escapeHtml(s.summary.verdict)}</span>
+          </div>
+          <div style="font-size:11px;color:#999;margin-top:2px">Saved ${date}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button data-load="${idx}" type="button"
+                  style="padding:5px 10px;background:#fff;color:#2563eb;border:1px solid #2563eb;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer">Load</button>
+          <button data-del="${idx}" type="button"
+                  style="padding:5px 10px;background:#fff;color:#b71c1c;border:1px solid #b71c1c;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer">Delete</button>
+        </div>
+      </div>`;
+    wrap.appendChild(div);
+  });
+  // Wire up buttons
+  wrap.querySelectorAll('[data-load]').forEach(b =>
+    b.addEventListener('click', () => loadScenario(+b.dataset.load)));
+  wrap.querySelectorAll('[data-del]').forEach(b =>
+    b.addEventListener('click', () => deleteScenario(+b.dataset.del)));
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+$('saveBtn').addEventListener('click', saveCurrent);
+$('saveName').addEventListener('keydown', e => { if (e.key === 'Enter') saveCurrent(); });
+
+document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calc));
+calc();
+renderScenarios();
+</script>
+</body>
+</html>
